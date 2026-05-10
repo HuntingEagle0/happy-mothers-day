@@ -179,102 +179,30 @@ function createConfetti() {
 }
 
 /* -----------------------------------------
-   MUSIC TOGGLE (Optional - plays a soft tone)
+   MUSIC TOGGLE (Laung Laachi)
    ----------------------------------------- */
 function initMusicToggle() {
     const btn = document.getElementById('musicToggle');
+    const bgMusic = document.getElementById('bgMusic');
     let isPlaying = false;
-    let audioContext = null;
-    let gainNode = null;
-    let oscillators = [];
+
+    // Optional: lower the volume slightly so it's pleasant background music
+    bgMusic.volume = 0.4;
 
     btn.addEventListener('click', () => {
         if (!isPlaying) {
-            startMusic();
-            btn.classList.add('playing');
-            isPlaying = true;
+            bgMusic.play().then(() => {
+                btn.classList.add('playing');
+                isPlaying = true;
+            }).catch(e => {
+                console.error("Audio play failed:", e);
+            });
         } else {
-            stopMusic();
+            bgMusic.pause();
             btn.classList.remove('playing');
             isPlaying = false;
         }
     });
-
-    function startMusic() {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        gainNode = audioContext.createGain();
-        gainNode.gain.value = 0.06; // Very soft
-        gainNode.connect(audioContext.destination);
-
-        // A gentle lullaby-like chord sequence
-        const notes = [
-            { freq: 261.63, type: 'sine' },     // C4
-            { freq: 329.63, type: 'sine' },     // E4
-            { freq: 392.00, type: 'sine' },     // G4
-            { freq: 523.25, type: 'triangle' }, // C5 (shimmer)
-        ];
-
-        notes.forEach(note => {
-            const osc = audioContext.createOscillator();
-            const noteGain = audioContext.createGain();
-            osc.type = note.type;
-            osc.frequency.setValueAtTime(note.freq, audioContext.currentTime);
-            noteGain.gain.value = 0.3;
-            osc.connect(noteGain);
-            noteGain.connect(gainNode);
-            osc.start();
-            oscillators.push({ osc, gain: noteGain });
-        });
-
-        // Gentle frequency modulation for warmth
-        animateChord();
-    }
-
-    function animateChord() {
-        if (!audioContext || audioContext.state === 'closed') return;
-
-        const chords = [
-            [261.63, 329.63, 392.00, 523.25], // C major
-            [293.66, 369.99, 440.00, 587.33], // D major
-            [261.63, 311.13, 392.00, 523.25], // C minor (touch of emotion)
-            [349.23, 440.00, 523.25, 698.46], // F major
-        ];
-
-        let chordIndex = 0;
-
-        function nextChord() {
-            if (!audioContext || audioContext.state === 'closed') return;
-
-            const chord = chords[chordIndex % chords.length];
-            oscillators.forEach((item, i) => {
-                if (chord[i]) {
-                    item.osc.frequency.linearRampToValueAtTime(
-                        chord[i],
-                        audioContext.currentTime + 2
-                    );
-                }
-            });
-
-            chordIndex++;
-            setTimeout(nextChord, 4000);
-        }
-
-        setTimeout(nextChord, 4000);
-    }
-
-    function stopMusic() {
-        oscillators.forEach(item => {
-            item.gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
-            setTimeout(() => item.osc.stop(), 600);
-        });
-        oscillators = [];
-        setTimeout(() => {
-            if (audioContext) {
-                audioContext.close();
-                audioContext = null;
-            }
-        }, 700);
-    }
 }
 
 /* -----------------------------------------
